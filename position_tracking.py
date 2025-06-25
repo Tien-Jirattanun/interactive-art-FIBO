@@ -4,16 +4,15 @@ import numpy as np
 from math import atan2, asin, degrees
 
 # --- Load camera parameters ---
-camera_matrix = np.array([[2222.14079, 0.0, 1288.84782],
-                          [0.0, 2232.39477, 692.65259],
-                          [0.0, 0.0, 1.0]])
-dist_coeffs = np.array([[0.06365349, -0.28989867, -0.01651292, 0.00030322, 0.23100818]])
+with np.load("calibration_data.npz") as X:
+    camera_matrix = X["camera_matrix"]
+    dist_coeffs = X["dist_coeffs"]
 
 # --- Parameters ---
 marker_length = 0.055  # in meters
 
 # --- Setup video capture ---
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 aruco_dict = aruco.getPredefinedDictionary(cv2.aruco.DICT_6X6_250)
 parameters = aruco.DetectorParameters()
 
