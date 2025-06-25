@@ -4,13 +4,13 @@ import numpy as np
 from math import atan2, asin, degrees
 
 # --- Load camera parameters ---
-camera_matrix = np.array([[3525.51950, 0.0, 990.993533],
-                          [0.0, 3504.84970, 822.983106],
+camera_matrix = np.array([[2222.14079, 0.0, 1288.84782],
+                          [0.0, 2232.39477, 692.65259],
                           [0.0, 0.0, 1.0]])
-dist_coeffs = np.array([[-0.39474077, 1.36218134, -0.0064096, -0.00286186, -0.09811778]])
+dist_coeffs = np.array([[0.06365349, -0.28989867, -0.01651292, 0.00030322, 0.23100818]])
 
 # --- Parameters ---
-marker_length = 0.20  # in meters
+marker_length = 0.055  # in meters
 
 # --- Setup video capture ---
 cap = cv2.VideoCapture(0)
