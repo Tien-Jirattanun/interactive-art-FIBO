@@ -9,7 +9,7 @@ with np.load("calibration_data.npz") as X:
     dist_coeffs = X["dist_coeffs"]
 
 # --- Parameters ---
-marker_length = 0.055  # in meters
+marker_length = 0.15  # in meters
 
 # --- Setup video capture ---
 cap = cv2.VideoCapture(1)
