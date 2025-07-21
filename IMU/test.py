@@ -20,10 +20,13 @@ async def scan():
         print("No devices found.")
         return
 
-    user_input = input(
-        "Enter MAC address to connect (e.g. DF:E9:1F:2C:BD:59): ").strip().lower()
+    lock_input = "B642129E-A384-ED0C-893F-235975A6F543".strip().lower()
+
+    # for custom mac address
+    # user_input = input(
+    #     "Enter MAC address to connect (e.g. DF:E9:1F:2C:BD:59): ").strip().lower()
     for d in devices:
-        if d.address.lower() == user_input:
+        if d.address.lower() == lock_input:
             BLEDevice = d
             return
 
