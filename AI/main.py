@@ -22,8 +22,6 @@ while True:
     boxes = results.boxes.xyxy.cpu().numpy().astype(int)
     class_ids = results.boxes.cls.cpu().numpy().astype(int)
     
-    
-
     # Loop through detections
     list_of_persons.clear()
     for box, class_id in zip(boxes, class_ids):

@@ -2,78 +2,88 @@ import asyncio
 from bleak import BleakScanner
 from device_model import DeviceModel
 
-BLEDevice = None
+BLEDevice_one = None
+BLEDevice_two = None
 
-last_angz = None 
-rotation_sum = 0
+one_rotation = 0
+two_rotation = 0
 
-rotation = 0
+imu_states = {
+    "one": {"last_angz": None, "rotation_sum": 0, "rotation": 0},
+    "two": {"last_angz": None, "rotation_sum": 0, "rotation": 0},
+}
 
 async def scan():
-    global BLEDevice
+    global BLEDevice_one, BLEDevice_two
     print("Scanning for WT BLE devices...")
     devices = await BleakScanner.discover(timeout=10.0)
-    for d in devices:
-        if d.name and "WT" in d.name:
-            print(f"Found: {d.name} | {d.address}")
+
     if not devices:
         print("No devices found.")
         return
 
-    lock_input = "B642129E-A384-ED0C-893F-235975A6F543".strip().lower()
-
-    # for custom mac address
-    # user_input = input(
-    #     "Enter MAC address to connect (e.g. DF:E9:1F:2C:BD:59): ").strip().lower()
     for d in devices:
-        if d.address.lower() == lock_input:
-            BLEDevice = d
+        if d.name and "WT" in d.name:
+            print(f"Found: {d.name} | {d.address}")
+
+    lock_input_one = input("Enter MAC address one to connect: ").strip().lower()
+    lock_input_two = input("Enter MAC address two to connect: ").strip().lower()
+
+    for d in devices:
+        if d.address.lower() == lock_input_one:
+            BLEDevice_one = d
+        if d.address.lower() == lock_input_two:
+            BLEDevice_two = d
+
+def handle_angz_factory(label):
+    one_rotation = 0
+    two_rotation = 0
+    def handle_angz(current_angz):
+        state = imu_states[label]
+        last_angz = state["last_angz"]
+
+        if last_angz is None:
+            state["last_angz"] = current_angz
             return
 
-# call back is here
-# code right here in this function
+        delta = current_angz - last_angz
 
+        # Handle wrap-around
+        if delta > 180:
+            delta -= 360
+        elif delta < -180:
+            delta += 360
 
-def handle_angz(current_angz):
+        state["rotation_sum"] += delta
+        state["last_angz"] = current_angz
 
-    global last_angz
-    global rotation_sum
-    global rotation 
-    
-    rotation = 0
+        print(f"[{label}] Current: {current_angz:.2f}, Δ: {delta:.2f}, Accumulated: {state['rotation_sum']:.2f}")
 
-    if last_angz is None:
-        last_angz = current_angz
-        return
-
-    # Compute difference
-    delta = current_angz - last_angz
-
-    # Handle wrap-around (180° -> -180°)
-    if delta > 180:
-        delta -= 360
-    elif delta < -180:
-        delta += 360
-
-    rotation_sum += delta
-    last_angz = current_angz
-
-    print(f"Current Angle: {current_angz:.2f}, Δ: {delta:.2f}, Accumulated: {rotation_sum:.2f}")
-
-    # Detect full turn
-    if abs(rotation_sum) >= 180:
-        print("🌀 Full turn detected!")
-        rotation = 1
-        rotation_sum = 0  # Reset for next turn
-
+        if abs(state["rotation_sum"]) >= 180:
+            print(f"[{label}] 🌀 Full turn detected!")
+            
+            if (label == "one"):
+               one_rotation = 1
+            elif (label == "two"):
+               two_rotation = 1 
+            
+            state["rotation"] = 1
+            state["rotation_sum"] = 0
+    return handle_angz
 
 async def main():
     await scan()
-    if BLEDevice:
-        device = DeviceModel("MyWT901", BLEDevice, handle_angz)
-        await device.openDevice()
+    if BLEDevice_one and BLEDevice_two:
+        device_one = DeviceModel("IMU-One", BLEDevice_one, handle_angz_factory("one"))
+        device_two = DeviceModel("IMU-Two", BLEDevice_two, handle_angz_factory("two"))
+
+        # Run both devices concurrently
+        await asyncio.gather(
+            device_one.openDevice(),
+            device_two.openDevice()
+        )
     else:
-        print("No BLE device selected.")
+        print("One or both BLE devices not selected.")
 
 if __name__ == "__main__":
     asyncio.run(main())
