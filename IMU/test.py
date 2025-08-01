@@ -5,6 +5,7 @@ from device_model import DeviceModel
 BLEDevice_one = None
 BLEDevice_two = None
 
+# use this variable!!!!!
 one_rotation = 0
 two_rotation = 0
 
@@ -36,9 +37,14 @@ async def scan():
             BLEDevice_two = d
 
 def handle_angz_factory(label):
+    # reset global variables
+    global one_rotation, two_rotation
     one_rotation = 0
     two_rotation = 0
+    
+    # call back
     def handle_angz(current_angz):
+        global one_rotation, two_rotation
         state = imu_states[label]
         last_angz = state["last_angz"]
 
